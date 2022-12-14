@@ -38,7 +38,7 @@ class RunServices extends BaseServices
                 if ($configHookName === $invokeHookName) {
                     $this->output->writeln("<info>husky > {$invokeHookName} </info>");
                     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                        $shell = "bash ${shell}";
+                        $shell = "bash {$shell}";
                     }
                     system($shell,$returnCode);
                     exit($returnCode);

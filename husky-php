@@ -27,7 +27,7 @@ $application = new Application();
 
 foreach (\App\Util\Util::getAllCommands() as $command) {
     $class = \substr($command, 0, \strpos($command, '.'));
-    $className = "\App\Commands\\${class}";
+    $className = "\App\Commands\\{$class}";
     $application->add(new $className());
 }
 

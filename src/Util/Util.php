@@ -243,23 +243,23 @@ class Util
 
 # Hook created by Husky
 
-scriptPath="${runScriptPath}"
+scriptPath="{$runScriptPath}"
 command='husky:run'
 hookName=`basename "\$0"`
 gitParams="$*"
 
 if [ -f "\$scriptPath" ]; then
-  if [ -f ${huskyrc} ]; then
-    . ${huskyrc}
+  if [ -f {$huskyrc} ]; then
+    . {$huskyrc}
   fi
-  php "\${scriptPath}" \${command} \${hookName} "\${gitParams}"
+  php "{\$scriptPath}" {\$command} {\$hookName} "{\$gitParams}"
   
   if [ $? -ne 0 ];then
-      echo -e "\033[31m\${hookName} Operation interrupted\033[0m"
+      echo -e "\033[31m{\$hookName} Operation interrupted\033[0m"
       exit 1
   fi
 else
-  echo -e "\033[33mCan't find Husky, skipping \${hookName} hook\033[0m"
+  echo -e "\033[33mCan't find Husky, skipping {\$hookName} hook\033[0m"
   echo -e "\033[33mYou can reinstall it using 'composer require husky-php' or delete this hook\033[0m"
 fi
 
