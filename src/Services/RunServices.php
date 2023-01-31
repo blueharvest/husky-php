@@ -30,7 +30,6 @@ class RunServices extends BaseServices
     {
         $invokeHookName = $this->input->getArgument('hookName');
 
-        // TODO: not used
         $gitParams = $this->input->getArgument('gitParams');
 
         if (isset($this->conf['hooks'])) {
@@ -40,6 +39,11 @@ class RunServices extends BaseServices
                     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
                         $shell = "bash {$shell}";
                     }
+
+                    if (0 !== \count($gitParams)) {
+                        $shell .= ' ' . implode(' ', $gitParams);
+                    }
+
                     system($shell,$returnCode);
                     exit($returnCode);
                 }
