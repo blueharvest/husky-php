@@ -130,7 +130,7 @@ class InstallServices extends BaseServices
                 $this->writeHook($filename);
             }
 
-            $this->io->warning("skipping existing user hook: ${name}");
+            $this->io->warning("skipping existing user hook: {$name}");
 
             return;
         }
