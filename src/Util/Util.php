@@ -4,96 +4,96 @@ namespace App\Util;
 
 class Util
 {
-    const PHP5 = 5;
+    public const PHP8 = 8;
 
-    const PHP7 = 7;
+    /**
+     * @var string
+     */
+    public static string $vendor = 'vendor';
 
-    public static $vendor = 'vendor';
-
-    public static $bin_dir = 'bin';
+    /**
+     * @var string
+     */
+    public static string $binDir = 'bin';
 
     /**
      * @param $dir
      *
      * @return array
      */
-    public static function getAllFiles($dir)
+    public static function getAllFiles($dir): array
     {
         $fileArr = [];
-        if (is_dir($dir)) {
-            if ($dh = @opendir($dir)) {
-                while (($file = readdir($dh)) !== false) {
-                    if ($file != '.' && $file != '..') {
-                        $fileArr[] = $file;
-                    }
+        if (\is_dir($dir) && ($dh = @\opendir($dir))) {
+            while (($file = \readdir($dh)) !== false) {
+                if ($file !== '.' && $file !== '..') {
+                    $fileArr[] = $file;
                 }
-                //关闭
-                closedir($dh);
             }
+            \closedir($dh);
         }
 
         return $fileArr;
     }
 
     /**
-     * @param      $fileOrDir
-     * @param null $dstDir
+     * @param $fileOrDir
+     * @param $dstDir
      * @param bool $clear
      *
      * @return array|string
      */
-    public static function getFileOrDirPath($fileOrDir, $dstDir = null, $clear = false)
+    public static function getFileOrDirPath($fileOrDir, $dstDir = null, bool $clear = false): array|string
     {
-//        static $arr = [];
-
         static $dstPath = '';
-        $files = [];
+        $files          = [];
 
         if ($clear) {
             $dstPath = '';
         }
 
-        if (is_dir($fileOrDir)) {
-            $handle = @opendir($fileOrDir);
-            while ($file = readdir($handle)) {
-                if (!in_array($file, ['.', '..']) && strpos($file, '.') !== 0) {
+        if (\is_dir($fileOrDir)) {
+            $handle = @\opendir($fileOrDir);
+            while ($file = \readdir($handle)) {
+                if (!\in_array($file, ['.', '..'], true) && !\str_starts_with($file, '.')) {
                     $files[] = $file;
                 }
             }
 
             // exclude npm directory
             if (
-                !in_array('package.json', $files)
+                !\in_array('package.json', $files, true)
                 ||
-                (in_array('package.json', $files) && in_array('composer.json', $files))
+                (\in_array('package.json', $files, true) && \in_array('composer.json', $files, true))
             ) {
                 foreach ($files as $file) {
-                    $path = $fileOrDir . "/" . $file;
+                    $path = $fileOrDir . '/' . $file;
 
                     if (!empty($dstDir) && $dstDir === $file) {
                         $dstPath = $path;
 
-                        @closedir($handle);
+                        @\closedir($handle);
 
                         return $dstPath;
                     }
-//                    array_push($arr, $path);
-                    if (is_dir($path)) {
+
+                    if (\is_dir($path)) {
                         self::getFileOrDirPath($path, $dstDir);
                     }
                 }
             }
 
-            @closedir($handle);
+            @\closedir($handle);
         }
 
         return !empty($dstDir) && !empty($dstPath) ? $dstPath : [];
     }
 
+
     /**
      * @return array
      */
-    public static function getAllCommands()
+    public static function getAllCommands(): array
     {
         $root = self::getDirName(__DIR__);
         $path = $root . DIRECTORY_SEPARATOR . 'Commands';
@@ -103,37 +103,17 @@ class Util
 
     /**
      * @param $path
-     * @param $extension
-     *
-     * @return array
-     */
-    public static function getAllFilesByExtension($path, $extension)
-    {
-        $files = self::getAllFiles($path);
-
-        $result = [];
-        foreach ($files as $file) {
-            if (strtolower(pathinfo($file, PATHINFO_EXTENSION)) === strtolower($extension)) {
-                $result[] = $file;
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param $path
      * @param $pattern
      *
      * @return array
      */
-    public static function getAllFilesByPattern($path, $pattern)
+    public static function getAllFilesByPattern($path, $pattern): array
     {
         $files = self::getAllFiles($path);
 
         $result = [];
         foreach ($files as $file) {
-            if (preg_match($pattern, $file, $match)) {
+            if (\preg_match($pattern, $file, $match)) {
                 $result[] = $file;
             }
         }
@@ -147,16 +127,10 @@ class Util
      *
      * @return string
      */
-    public static function getDirName($path, $level = 1)
+    public static function getDirName($path, int $level = 1): string
     {
-        if ((int)substr(PHP_VERSION, 0, 1) === static::PHP5) {
-            $dirName = $path;
-            while ($level > 0) {
-                $dirName = dirname($dirName);
-                $level--;
-            }
-        } else if ((int)substr(PHP_VERSION, 0, 1) >= static::PHP7) {
-            $dirName = dirname($path, $level);
+        if ((int)\mb_substr(PHP_VERSION, 0, 1) >= static::PHP8) {
+            $dirName = \dirname($path, $level);
         } else {
             die('Not support php version');
         }
@@ -164,30 +138,22 @@ class Util
         return $dirName;
     }
 
-    public static function getPhpDir()
+    /**
+     * @return false|mixed
+     */
+    public static function getUserDir(): mixed
     {
-        $path = __DIR__;
+        $path = \str_replace('\\', '/', \getcwd());
 
-        while (substr($path, -strlen(self::$vendor)) !== self::$vendor) {
-            if ($path === '/') {
-                return false;
-            }
-            $path = self::getDirName($path);
-        }
-
-        return self::getDirName($path, 2);
+        return self::getGitDir($path);
     }
 
-    public static function getUserDir()
-    {
-        $path = str_replace('\\', '/', getcwd());
-
-        $path = self::getGitDir($path);
-
-        return $path;
-    }
-
-    public static function getGitDir($path)
+    /**
+     * @param $path
+     *
+     * @return false|mixed
+     */
+    public static function getGitDir($path): mixed
     {
         if (!self::existsGitDir($path)) {
             $path = self::getDirName($path);
@@ -203,83 +169,64 @@ class Util
     }
 
     /**
-     * @param $path
+     * @param string $path
      *
      * @return bool
      */
-    public static function existsGitDir($path)
+    public static function existsGitDir(string $path): bool
     {
         $dir = '.git';
 
-        if (file_exists($path . DIRECTORY_SEPARATOR . $dir)) {
-            return true;
-        }
-
-        return false;
+        return \file_exists($path . DIRECTORY_SEPARATOR . $dir);
     }
 
     /**
-     * @param $path
+     * @param string $runScriptPath
      *
-     * @return bool
+     * @return string
      */
-    public static function existsComposerFile($path)
+    public static function getScript(string $runScriptPath): string
     {
-        $file = 'composer.json';
+        $huskyrc = '~/.huskyrc.json'; //TODO Calculate runtime value
 
-        if (file_exists($path . DIRECTORY_SEPARATOR . $file)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public static function getScript($runScriptPath)
-    {
-        $huskyrc = '~/.huskyrc';
-        $render = <<<SHELL
+        return <<<SHELL
 #!/bin/bash
-# husky-php
+# husky
 
-# Hook created by Husky
+# Hook created by husky
 
 scriptPath="{$runScriptPath}"
 command='husky:run'
 hookName=`basename "\$0"`
-gitParams="$*"
 
 if [ -f "\$scriptPath" ]; then
   if [ -f {$huskyrc} ]; then
     . {$huskyrc}
   fi
-  php "\${scriptPath}" \${command} \${hookName} "\${gitParams}"
   
-  if [ $? -ne 0 ];then
+  php "\${scriptPath}" \${command} \${hookName}
+  
+  if [ $? -ne 0 ]; then
       echo -e "\033[31m\${hookName} Operation interrupted\033[0m"
       exit 1
   fi
 else
-  echo -e "\033[33mCan't find Husky, skipping \${hookName} hook\033[0m"
-  echo -e "\033[33mYou can reinstall it using 'composer require husky-php' or delete this hook\033[0m"
+  echo -e "\033[33mCan't find husky, skipping \${hookName} hook\033[0m"
+  echo -e "\033[33mYou can reinstall it using 'composer require husky/husky' or delete this hook\033[0m"
 fi
 
 SHELL;
-
-        return $render;
     }
 
     /**
-     * @param $data
+     * @param string $data
      *
      * @return bool
      */
-    public static function isHusky($data)
+    public static function ishusky(string $data): bool
     {
-        $previousHuskyIdentifier = '# husky-php';
-        if (strpos($data, $previousHuskyIdentifier) !== false) {
-            return true;
-        }
+        $previoushuskyIdentifier = '# husky';
 
-        return false;
+        return \str_contains($data, $previoushuskyIdentifier);
     }
 }
