@@ -26,8 +26,6 @@ class RunServices extends BaseServices
     protected function execute(): bool
     {
         $invokeHookName = $this->input->getArgument('hookName');
-
-        $gitParams = $this->input->getArgument('gitParams');
         $dryRun         = $this->input->getOption('dry-run');
 
         if (isset($this->conf['hooks'])) {
@@ -35,11 +33,7 @@ class RunServices extends BaseServices
                 if ($configHookName === $invokeHookName) {
                     $this->io->info("husky > {$invokeHookName}");
                     if (\mb_strtoupper(\mb_substr(PHP_OS, 0, 3)) === 'WIN') {
-                        $shell = "bash ${shell}";
-                    }
-
-                    if (0 !== \count($gitParams)) {
-                        $shell .= ' ' . implode(' ', $gitParams);
+                        $shell = "bash {$shell}";
                     }
 
                     $returnCode = 1;
