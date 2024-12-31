@@ -42,7 +42,11 @@ class RunServices extends BaseServices
                         \system($shell, $returnCode);
                     }
 
-                    return $returnCode;
+                    if (0 === $returnCode) {
+                        return true;
+                    }
+
+                    exit($returnCode);
                 }
             }
         }
